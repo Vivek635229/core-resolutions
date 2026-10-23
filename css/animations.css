@@ -1,0 +1,133 @@
+/* ============================================================
+   CORE RESOLUTION GROUP INC. — Animation System v2.0
+   Polished scroll reveals, entrance animations, and micro-interactions
+   ============================================================ */
+
+/* ── Reduced Motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal, .reveal-left, .reveal-right, .reveal-scale {
+    opacity: 1 !important; transform: none !important;
+  }
+  .hero-enter { opacity: 1 !important; transform: none !important; }
+  .hero-visual-enter { opacity: 1 !important; transform: none !important; }
+}
+
+/* ── Hero Entrance ───────────────────────────────────────── */
+.hero-enter {
+  opacity: 0; transform: translateY(24px);
+  animation: heroEntrance 0.8s var(--ease-out) forwards;
+}
+
+.hero-enter--delay-1 { animation-delay: 0.1s; }
+.hero-enter--delay-2 { animation-delay: 0.25s; }
+.hero-enter--delay-3 { animation-delay: 0.45s; }
+.hero-enter--delay-4 { animation-delay: 0.6s; }
+
+@keyframes heroEntrance {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero Image Reveal */
+.hero-visual-enter {
+  opacity: 0; transform: translateX(40px);
+  animation: heroImageReveal 1s var(--ease-out) 0.4s forwards;
+}
+
+@keyframes heroImageReveal {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Scroll Reveals (Intersection Observer) ──────────────── */
+.reveal {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.reveal--visible {
+  opacity: 1; transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0; transform: translateX(-32px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.reveal-left--visible {
+  opacity: 1; transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0; transform: translateX(32px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.reveal-right--visible {
+  opacity: 1; transform: translateX(0);
+}
+
+.reveal-scale {
+  opacity: 0; transform: scale(0.95);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.reveal-scale--visible {
+  opacity: 1; transform: scale(1);
+}
+
+/* ── Stagger Delays ──────────────────────────────────────── */
+.stagger-1 { transition-delay: 0.08s; }
+.stagger-2 { transition-delay: 0.16s; }
+.stagger-3 { transition-delay: 0.24s; }
+.stagger-4 { transition-delay: 0.32s; }
+.stagger-5 { transition-delay: 0.4s; }
+.stagger-6 { transition-delay: 0.48s; }
+
+/* ── Image Hover Zoom ────────────────────────────────────── */
+.img-hover-zoom {
+  overflow: hidden;
+}
+.img-hover-zoom img {
+  transition: transform 0.6s var(--ease-out);
+}
+.img-hover-zoom:hover img {
+  transform: scale(1.05);
+}
+
+/* ── Floating accent animation ───────────────────────────── */
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.hero__image-accent {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+/* ── Full-Background Hero Carousel Staggered Text Animations ── */
+.hero-carousel__slide--active .hero-carousel__eyebrow-wrap {
+  animation: heroSlideTextIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+.hero-carousel__slide--active .hero-carousel__headline {
+  animation: heroSlideTextIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+.hero-carousel__slide--active .hero-carousel__description {
+  animation: heroSlideTextIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+.hero-carousel__slide--active .hero-carousel__actions {
+  animation: heroSlideTextIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+@keyframes heroSlideTextIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

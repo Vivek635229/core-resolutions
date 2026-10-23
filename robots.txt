@@ -1,0 +1,7 @@
+# CORE RESOLUTION GROUP INC. — robots.txt
+# Replace example.com with the confirmed production domain.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
