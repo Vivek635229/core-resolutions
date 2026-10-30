@@ -309,7 +309,7 @@ img, svg {
       linear-gradient(90deg, rgba(8, 20, 42, 0.88) 0%, rgba(8, 20, 42, 0.6) 100%);
   }
 
-  /* Company Code Lookup */
+  /* Company & Certificate Lookup */
   .lookup__card {
     padding: var(--space-6);
   }
@@ -328,6 +328,58 @@ img, svg {
     width: 100%;
     justify-content: center;
     padding: 14px 20px;
+  }
+
+  .lookup__cert-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px;
+    gap: 10px;
+  }
+
+  .lookup__cert-header {
+    padding: 16px;
+  }
+
+  .lookup__cert-company-name {
+    font-size: 1.15rem;
+  }
+
+  .lookup__cert-section {
+    padding: 16px;
+  }
+
+  .lookup__cert-meta-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .lookup__cert-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .lookup__cert-notice {
+    margin: 16px;
+    padding: 14px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .lookup__cert-actions {
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .lookup__cert-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .lookup__cert-table th,
+  .lookup__cert-table td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
   }
 
   .lookup__result-header {
@@ -1080,5 +1132,98 @@ img, svg {
 
   .hero-carousel__headline {
     font-size: 4.25rem;
+  }
+}
+
+
+/* ── 10. Insurance Service Portal Responsive Overrides ─────────── */
+@media (max-width: 767px) {
+  .insurance-portal {
+    padding: var(--space-10) 0;
+  }
+
+  .portal__card {
+    border-radius: var(--radius-md);
+  }
+
+  .portal__tabs {
+    flex-direction: row;
+  }
+
+  .portal__tab {
+    padding: var(--space-3) var(--space-2);
+    font-size: var(--text-sm);
+    gap: 6px;
+  }
+
+  .portal__tab-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .portal__panel {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .portal__form-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .portal__file-zone {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .status-timeline {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    text-align: left;
+  }
+
+  .status-timeline__step {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: var(--space-3);
+  }
+
+  .status-timeline__indicator {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .status-card__header {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .success-modal__card {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .success-modal__actions {
+    flex-direction: column;
+  }
+
+  .success-modal__code {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .portal__tabs {
+    flex-direction: column;
+  }
+
+  .portal__tab {
+    border-bottom: 1px solid var(--color-border);
+    justify-content: flex-start;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .portal__tab--active {
+    border-left: 4px solid var(--color-accent);
+    border-bottom-color: var(--color-border);
   }
 }

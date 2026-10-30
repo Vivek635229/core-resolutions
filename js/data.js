@@ -1,81 +1,207 @@
 /**
- * CORE RESOLUTION GROUP INC. — Demo Company Lookup Dataset
- * =========================================================
- * IMPORTANT: This file contains FICTIONAL demonstration records only.
- * These records are used solely for the client presentation and do NOT
- * represent real companies, customers, or confidential data.
+ * CORE RESOLUTION GROUP INC. — Claims Data Store
+ * ====================================================================
+ * Manages claim submissions and tracking using localStorage.
  *
- * When a production API becomes available, replace the `lookupCompany`
- * function with a fetch call to the real endpoint (e.g., /api/company-lookup).
+ * DEMONSTRATION MODE:
+ * This module uses browser localStorage as a temporary data store.
+ * All claim data is stored locally in the user's browser and is NOT
+ * sent to any server. In production, replace with a secured backend
+ * API connected to a proper database.
+ *
+ * Reference code format: CA + 6 digits (e.g., CA300681)
  */
 
-const DEMO_COMPANIES = [
-  {
-    code: "CRG-DEMO-001",
-    name: "Meridian Logistics Partners",
-    referenceCode: "CRG-DEMO-001",
-    status: "Active",
-    industry: "Logistics & Supply Chain",
-    contactEmail: "contact@example-meridian.com",
-    dateRegistered: "2024-03-15",
-    assignedRepresentative: "Resolution Team A",
-    notes: "This is a sample record for demonstration purposes."
-  },
-  {
-    code: "CRG-DEMO-002",
-    name: "Pinnacle Advisory Services",
-    referenceCode: "CRG-DEMO-002",
-    status: "Active",
-    industry: "Financial Advisory",
-    contactEmail: "info@example-pinnacle.com",
-    dateRegistered: "2024-06-22",
-    assignedRepresentative: "Resolution Team B",
-    notes: "This is a sample record for demonstration purposes."
-  },
-  {
-    code: "CRG-DEMO-003",
-    name: "Catalyst Infrastructure Group",
-    referenceCode: "CRG-DEMO-003",
-    status: "Under Review",
-    industry: "Infrastructure & Development",
-    contactEmail: "hello@example-catalyst.com",
-    dateRegistered: "2025-01-10",
-    assignedRepresentative: "Resolution Team C",
-    notes: "This is a sample record for demonstration purposes."
-  }
-];
+var ClaimsStore = (function () {
+  "use strict";
 
-/**
- * Simulate an asynchronous company lookup.
- * In production, replace this with a real API call:
- *
- *   async function lookupCompany(code) {
- *     const response = await fetch('/api/company-lookup', {
- *       method: 'POST',
- *       headers: { 'Content-Type': 'application/json' },
- *       body: JSON.stringify({ code })
- *     });
- *     if (!response.ok) throw new Error('Network error');
- *     return response.json();
- *   }
- *
- * @param {string} code - The company code entered by the user.
- * @returns {Promise<object|null>} The matching demo record, or null.
- */
-function lookupCompany(code) {
-  return new Promise((resolve, reject) => {
-    // Simulate network latency (800–1500 ms)
-    const delay = 800 + Math.random() * 700;
-    setTimeout(() => {
-      if (!code || typeof code !== "string") {
-        reject(new Error("Invalid company code format."));
-        return;
+  var STORAGE_KEY = "crg_claims";
+  var COUNTER_KEY = "crg_claim_counter";
+  var STARTING_COUNTER = 300681;
+  var DEMO_LABEL = "Demonstration Mode — Data stored locally in your browser.";
+
+  // Resilient storage fallback for Node.js test environments or privacy modes
+  var memStore = {};
+  var storage = (function () {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        return window.localStorage;
       }
-      const normalized = code.trim().toUpperCase();
-      const match = DEMO_COMPANIES.find(
-        (c) => c.code.toUpperCase() === normalized
-      );
-      resolve(match || null);
-    }, delay);
-  });
+      if (typeof localStorage !== "undefined") {
+        return localStorage;
+      }
+    } catch (e) {}
+    return {
+      getItem: function (key) { return Object.prototype.hasOwnProperty.call(memStore, key) ? memStore[key] : null; },
+      setItem: function (key, val) { memStore[key] = String(val); },
+      removeItem: function (key) { delete memStore[key]; },
+      clear: function () { memStore = {}; }
+    };
+  })();
+
+  /**
+   * Get all stored claims.
+   * @returns {Array<object>}
+   */
+  function getAll() {
+    try {
+      var data = storage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.warn("ClaimsStore: Could not read claims from storage.", e);
+      return [];
+    }
+  }
+
+  /**
+   * Save the full claims array to storage.
+   * @param {Array<object>} claims
+   */
+  function _saveAll(claims) {
+    try {
+      storage.setItem(STORAGE_KEY, JSON.stringify(claims));
+    } catch (e) {
+      console.error("ClaimsStore: Could not save claims to storage.", e);
+    }
+  }
+
+  /**
+   * Get the next auto-incrementing reference code.
+   * @returns {string} e.g., "CA300682"
+   */
+  function getNextCode() {
+    var counter;
+    try {
+      var stored = storage.getItem(COUNTER_KEY);
+      counter = stored ? parseInt(stored, 10) : STARTING_COUNTER;
+      if (isNaN(counter) || counter < STARTING_COUNTER) {
+        counter = STARTING_COUNTER;
+      }
+    } catch (e) {
+      counter = STARTING_COUNTER;
+    }
+
+    counter++;
+
+    try {
+      storage.setItem(COUNTER_KEY, String(counter));
+    } catch (e) {
+      console.error("ClaimsStore: Could not save counter.", e);
+    }
+
+    return "CA" + String(counter).padStart(6, "0");
+  }
+
+  /**
+   * Find a claim by its reference code.
+   * @param {string} code - The claim reference code (e.g., "CA300682").
+   * @returns {object|null}
+   */
+  function getByCode(code) {
+    if (!code) return null;
+    var normalized = String(code).trim().toUpperCase();
+    var claims = getAll();
+    for (var i = 0; i < claims.length; i++) {
+      if (claims[i].claimReferenceCode === normalized) {
+        return JSON.parse(JSON.stringify(claims[i]));
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Save a new claim. Generates a unique reference code.
+   * @param {object} claimData - { policyNumber, companyName, contactNumber, email, documents: [{name, size, type}] }
+   * @returns {object} The saved claim record with generated reference code.
+   */
+  function save(claimData) {
+    var refCode = getNextCode();
+    var now = new Date().toISOString();
+    var record = {
+      id: "claim_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6),
+      claimReferenceCode: refCode,
+      policyNumber: claimData.policyNumber || "",
+      companyName: claimData.companyName || "",
+      contactNumber: claimData.contactNumber || "",
+      email: claimData.email || "",
+      uploadedDocuments: claimData.documents || [],
+      status: "Received",
+      createdAt: now,
+      updatedAt: now,
+      statusHistory: [
+        {
+          status: "Received",
+          date: now,
+          message: "Claim request received and awaiting review."
+        }
+      ]
+    };
+
+    var claims = getAll();
+    claims.push(record);
+    _saveAll(claims);
+
+    return JSON.parse(JSON.stringify(record));
+  }
+
+  /**
+   * Seed a demo claim if localStorage is empty (so users can test tracking immediately).
+   */
+  function seedDemo() {
+    var claims = getAll();
+    var hasSeed = false;
+    for (var i = 0; i < claims.length; i++) {
+      if (claims[i].claimReferenceCode === "CA300681") {
+        hasSeed = true;
+        break;
+      }
+    }
+    if (!hasSeed) {
+      var now = new Date().toISOString();
+      var seedClaim = {
+        id: "claim_seed_demo",
+        claimReferenceCode: "CA300681",
+        policyNumber: "DEMO-POL-001",
+        companyName: "Demo Insurance Co.",
+        contactNumber: "(555) 000-0000",
+        email: "demo@example.com",
+        uploadedDocuments: [
+          { name: "sample-document.pdf", size: "245 KB", type: "application/pdf" }
+        ],
+        status: "Received",
+        createdAt: now,
+        updatedAt: now,
+        statusHistory: [
+          {
+            status: "Received",
+            date: now,
+            message: "Claim request received and awaiting review."
+          }
+        ]
+      };
+      claims.push(seedClaim);
+      _saveAll(claims);
+    }
+  }
+
+  // Seed on load
+  seedDemo();
+
+  return {
+    getAll: getAll,
+    getByCode: getByCode,
+    save: save,
+    getNextCode: getNextCode,
+    DEMO_LABEL: DEMO_LABEL
+  };
+})();
+
+// Attach to window for browser global access
+if (typeof window !== "undefined") {
+  window.ClaimsStore = ClaimsStore;
+}
+
+// Support Node.js environment for testing
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { ClaimsStore: ClaimsStore };
 }
