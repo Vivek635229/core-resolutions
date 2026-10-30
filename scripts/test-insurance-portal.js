@@ -132,15 +132,13 @@ async function runTests() {
   console.log('\nTest 12: Verifying Center-Screen Success Modal');
   const requiredModalIds = [
     'claim-success-modal',
-    'success-ref-code',
-    'success-modal-close',
-    'success-copy-code-btn',
-    'success-track-direct-btn'
+    'success-modal-close'
   ];
   requiredModalIds.forEach(id => {
     assert(html.includes(`id="${id}"`), `Missing required success modal element: id="${id}"`);
   });
-  console.log('  ✅ All 5 required success modal element IDs verified');
+  assert(html.includes('Your Form Has Been Successfully Submitted!'), 'Modal heading should indicate successful form submission');
+  console.log('  ✅ Success modal elements and clean message verified');
 
   // Test 13: Verify Script inclusions
   console.log('\nTest 13: Verifying Script Inclusions');
@@ -160,13 +158,20 @@ async function runTests() {
   console.log('\nTest 15: Verifying streamlined track claim status success result');
   const portalJsPath = path.join(__dirname, '..', 'js', 'insurance-portal.js');
   const portalJs = fs.readFileSync(portalJsPath, 'utf8');
-  assert(portalJs.includes('Claim Reference Code Verified Successfully'), 'Success banner title missing');
+  assert(portalJs.includes('Your Claim Has Been Submitted Successfully!'), 'Success banner title missing');
   assert(portalJs.includes('status-card__success-banner'), 'Success banner CSS class missing');
+  assert(portalJs.includes('CA300681'), 'Claim code CA300681 reference missing');
   assert(!portalJs.includes('renderStatusTimeline(status)'), 'Progress timeline should be removed from claim result');
   assert(portalJs.includes('track-check-another-btn'), 'Check another code action missing');
   console.log('  ✅ Track claim status streamlined success state verified');
 
-  console.log('\n🎉 ALL 15 TEST SUITES PASSED! Insurance website transformation verified.\n');
+  // Test 16: Verifying Contact Information
+  console.log('\nTest 16: Verifying Client Contact Information');
+  assert(html.includes('516-217-0673'), 'Mobile number 516-217-0673 missing');
+  assert(html.includes('info@coreresolution.net'), 'Email address info@coreresolution.net missing');
+  console.log('  ✅ Official phone and email verified across site');
+
+  console.log('\n🎉 ALL 16 TEST SUITES PASSED! Insurance website updates verified.\n');
 }
 
 runTests().catch(err => {

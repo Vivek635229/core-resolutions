@@ -417,11 +417,8 @@
   /* ─────────────────────────────────────────────────────────
      5. FORM SUBMISSION & SUCCESS MODAL
      ───────────────────────────────────────────────────────── */
-  function openSuccessModal(code) {
+  function openSuccessModal() {
     if (!successModal) return;
-    if (successRefCode) {
-      successRefCode.textContent = code;
-    }
     successModal.classList.add("success-modal--visible");
     document.body.classList.add("modal-open");
 
@@ -527,34 +524,26 @@
         documents: docSummaries
       };
 
-      // Simulated network request (1200ms - 1800ms)
+      // Simulated network request (1000ms)
       setTimeout(function () {
         try {
-          if (!window.ClaimsStore) {
-            throw new Error("ClaimsStore module is not available.");
-          }
-
-          var savedRecord = window.ClaimsStore.save(claimPayload);
-          if (!savedRecord || !savedRecord.claimReferenceCode) {
-            throw new Error("Failed to generate claim record.");
-          }
-
           // Reset form fields
           claimForm.reset();
           uploadedFiles = [];
           renderFileList();
 
-          // Open success modal
-          openSuccessModal(savedRecord.claimReferenceCode);
+          // Open success modal without generating/showing code to user
+          openSuccessModal();
         } catch (err) {
           console.error("Submission error:", err);
-          alert("An error occurred while saving your claim request. Please check your connection and try again.");
+          alert("An error occurred while submitting your claim request. Please check your connection and try again.");
+        } finally {
           if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.classList.remove("portal__submit-btn--loading");
           }
         }
-      }, 1400);
+      }, 1000);
     });
   }
 
@@ -571,88 +560,8 @@
       .replace(/'/g, "&#039;");
   }
 
-  function getStatusBadgeClass(status) {
-    switch (status) {
-      case "Received":
-        return "status-badge--received";
-      case "Under Review":
-        return "status-badge--review";
-      case "Additional Information Required":
-        return "status-badge--info-required";
-      case "Resolved":
-        return "status-badge--resolved";
-      case "Closed":
-        return "status-badge--closed";
-      default:
-        return "status-badge--default";
-    }
-  }
-
-  function renderStatusTimeline(currentStatus) {
-    var steps = [
-      { key: "Received", label: "Claim Submitted & Received" },
-      { key: "Under Review", label: "Under Review" },
-      { key: "Additional Information Required", label: "Additional Info (If Required)", optional: true },
-      { key: "Resolved", label: "Resolved / Closed" }
-    ];
-
-    // Determine current index
-    var activeIndex = 0;
-    if (currentStatus === "Under Review") activeIndex = 1;
-    else if (currentStatus === "Additional Information Required") activeIndex = 2;
-    else if (currentStatus === "Resolved" || currentStatus === "Closed") activeIndex = 3;
-
-    var html = '<div class="status-timeline">';
-
-    steps.forEach(function (step, idx) {
-      var stepClass = "status-timeline__step";
-      var isCompleted = idx < activeIndex;
-      var isActive = idx === activeIndex;
-
-      if (isCompleted) {
-        stepClass += " status-timeline__step--completed";
-      } else if (isActive) {
-        stepClass += " status-timeline__step--active";
-      }
-
-      var iconOrNum = isCompleted 
-        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
-        : '0' + (idx + 1);
-
-      html += 
-        '<div class="' + stepClass + '">' +
-          '<div class="status-timeline__indicator">' + iconOrNum + '</div>' +
-          '<div class="status-timeline__info">' +
-            '<span class="status-timeline__step-num">Step 0' + (idx + 1) + '</span>' +
-            '<h5 class="status-timeline__title">' + escapeHtml(step.label) + '</h5>' +
-          '</div>' +
-        '</div>';
-    });
-
-    html += '</div>';
-    return html;
-  }
-
-  function renderClaimResult(claim) {
+  function renderClaimResult(code) {
     if (!trackResult) return;
-
-    var status = claim.status || "Received";
-    var formattedDate = "";
-    if (claim.createdAt) {
-      var d = new Date(claim.createdAt);
-      formattedDate = d.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      });
-    }
-
-    var company = claim.companyName || "Commercial Policyholder";
-    var policy = claim.policyNumber || "Standard Policy Schedule";
-    var docsCount = claim.uploadedDocuments ? claim.uploadedDocuments.length : 0;
-    var docsList = docsCount > 0 
-      ? claim.uploadedDocuments.map(function (doc) { return escapeHtml(doc.name); }).join(", ")
-      : "Standard Claim Intake Form on File";
 
     trackResult.innerHTML = 
       '<div class="status-card status-card--verified">' +
@@ -665,44 +574,24 @@
             '</svg>' +
           '</div>' +
           '<div class="status-card__success-content">' +
-            '<h4 class="status-card__success-title">Claim Reference Code Verified Successfully</h4>' +
-            '<p class="status-card__success-sub">Reference code <strong>' + escapeHtml(claim.claimReferenceCode) + '</strong> is valid and active in our claims service system.</p>' +
+            '<h4 class="status-card__success-title">Your Claim Has Been Submitted Successfully!</h4>' +
+            '<p class="status-card__success-sub">Claim Code: <strong>' + escapeHtml(code) + '</strong> is active and verified in our system.</p>' +
           '</div>' +
         '</div>' +
 
         '<div class="status-card__header">' +
           '<div>' +
-            '<span class="status-card__eyebrow">Claim Reference Code</span>' +
-            '<h3 class="status-card__code">' + escapeHtml(claim.claimReferenceCode) + '</h3>' +
-            (formattedDate ? '<span class="status-card__date">Submitted on ' + formattedDate + '</span>' : '') +
+            '<span class="status-card__eyebrow">Claim Code</span>' +
+            '<h3 class="status-card__code">' + escapeHtml(code) + '</h3>' +
+            '<span class="status-card__date">Verified &amp; Active on File</span>' +
           '</div>' +
           '<div class="status-card__badge status-badge--valid">' +
             '<span class="status-badge__dot"></span>' +
-            'Active & In Review' +
+            'Active &amp; Received' +
           '</div>' +
         '</div>' +
 
         '<div class="status-card__body">' +
-          '<!-- Details Grid -->' +
-          '<div class="status-card__details-grid">' +
-            '<div class="status-card__detail-item">' +
-              '<span class="status-card__detail-label">Status</span>' +
-              '<span class="status-card__detail-val">Received & Awaiting Review</span>' +
-            '</div>' +
-            '<div class="status-card__detail-item">' +
-              '<span class="status-card__detail-label">Insured / Company</span>' +
-              '<span class="status-card__detail-val">' + escapeHtml(company) + '</span>' +
-            '</div>' +
-            '<div class="status-card__detail-item">' +
-              '<span class="status-card__detail-label">Policy Number</span>' +
-              '<span class="status-card__detail-val">' + escapeHtml(policy) + '</span>' +
-            '</div>' +
-            '<div class="status-card__detail-item">' +
-              '<span class="status-card__detail-label">Submitted Documents</span>' +
-              '<span class="status-card__detail-val">' + docsList + '</span>' +
-            '</div>' +
-          '</div>' +
-
           '<!-- Reassurance Message Box -->' +
           '<div class="status-card__message status-card__message--success">' +
             '<div class="status-card__message-icon">' +
@@ -712,8 +601,28 @@
               '</svg>' +
             '</div>' +
             '<p class="status-card__message-text">' +
-              '<strong>Claim Request Successfully Received:</strong> Your documentation is on file and awaiting review by our claims service team. Our specialists are verifying the submitted details. You will be contacted directly if any additional information or documentation is needed.' +
+              '<strong>Your Claim Request Is Successfully On File:</strong> Your claim documentation has been successfully received and is currently under review by our claims service team. Our representatives will contact you directly if any additional details are needed.' +
             '</p>' +
+          '</div>' +
+
+          '<!-- Details Grid -->' +
+          '<div class="status-card__details-grid">' +
+            '<div class="status-card__detail-item">' +
+              '<span class="status-card__detail-label">Claim Status</span>' +
+              '<span class="status-card__detail-val" style="color: #15803d;">Successfully Submitted &amp; In Review</span>' +
+            '</div>' +
+            '<div class="status-card__detail-item">' +
+              '<span class="status-card__detail-label">Claim Code</span>' +
+              '<span class="status-card__detail-val">' + escapeHtml(code) + '</span>' +
+            '</div>' +
+            '<div class="status-card__detail-item">' +
+              '<span class="status-card__detail-label">Support Email</span>' +
+              '<span class="status-card__detail-val"><a href="mailto:info@coreresolution.net" style="color: inherit;">info@coreresolution.net</a></span>' +
+            '</div>' +
+            '<div class="status-card__detail-item">' +
+              '<span class="status-card__detail-label">Support Phone</span>' +
+              '<span class="status-card__detail-val"><a href="tel:516-217-0673" style="color: inherit;">516-217-0673</a></span>' +
+            '</div>' +
           '</div>' +
 
           '<!-- Action Buttons -->' +
@@ -725,10 +634,6 @@
             '<a href="#insurance-portal" class="btn btn--primary btn--sm" data-portal-tab="submit">' +
               'Submit Another Claim' +
             '</a>' +
-          '</div>' +
-
-          '<div class="status-card__footer-notice">' +
-            '<p><strong>Important Note:</strong> A submitted claim request is awaiting review and does not constitute confirmed coverage or approved payment. If additional documentation is required, our team will contact you directly.</p>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -766,31 +671,9 @@
       if (trackLoading) trackLoading.style.display = "none";
       if (trackSubmitBtn) trackSubmitBtn.disabled = false;
 
-      var claim = window.ClaimsStore ? window.ClaimsStore.getByCode(normalized) : null;
-      var isValidFormat = /^CA\d{6}$/i.test(normalized) || /^CRG-[A-Z0-9\-]{3,10}$/i.test(normalized);
-
-      if (claim) {
-        renderClaimResult(claim);
-      } else if (isValidFormat) {
-        // Valid reference code format: generate active verification demonstration record
-        var syntheticClaim = {
-          claimReferenceCode: normalized,
-          companyName: "Registered Policyholder",
-          policyNumber: "POL-" + normalized.replace(/\D/g, "").slice(-4) + "-ACT",
-          status: "Received",
-          createdAt: new Date().toISOString(),
-          uploadedDocuments: [
-            { name: "claim-intake-record.pdf", size: "320 KB" }
-          ],
-          statusHistory: [
-            {
-              status: "Received",
-              date: new Date().toISOString(),
-              message: "Claim request received and awaiting review."
-            }
-          ]
-        };
-        renderClaimResult(syntheticClaim);
+      // Check if code is CA300681 or in ClaimsStore
+      if (normalized === "CA300681" || (window.ClaimsStore && window.ClaimsStore.getByCode(normalized))) {
+        renderClaimResult(normalized);
       } else {
         if (trackResult) trackResult.style.display = "none";
         if (trackNotFound) {
@@ -799,7 +682,7 @@
           if (codeSpan) codeSpan.textContent = normalized;
         }
       }
-    }, 600);
+    }, 500);
   }
 
   if (trackForm) {
