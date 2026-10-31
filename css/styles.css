@@ -2283,7 +2283,7 @@ p {
       rgba(11, 25, 51, 0.88) 50%,
       rgba(5, 12, 26, 0.95) 100%
     ),
-    url("../assets/images/why/why-bg.jpg");
+    url("../assets/images/why/why-bg.jpg?v=2.1.0");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;

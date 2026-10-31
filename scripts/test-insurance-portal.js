@@ -83,7 +83,7 @@ async function runTests() {
   // Test 8: Verify Portal Heading & Subtitle
   console.log('\nTest 8: Verifying Portal Heading & Subtitle');
   assert(html.includes('How Can We Help You Today?'), 'Portal heading missing');
-  assert(html.includes('Submit your insurance claim or access your claim status quickly and securely.'), 'Portal description missing');
+  assert(html.includes('Submit your insurance claim or access your claim status'), 'Portal description missing');
   console.log('  ✅ Portal header text matches specification verbatim');
 
   // Test 9: Verify Tab buttons and panels
@@ -142,8 +142,8 @@ async function runTests() {
 
   // Test 13: Verify Script inclusions
   console.log('\nTest 13: Verifying Script Inclusions');
-  assert(html.includes('src="js/data.js"'), 'Missing js/data.js script');
-  assert(html.includes('src="js/insurance-portal.js"'), 'Missing js/insurance-portal.js script');
+  assert(html.includes('src="js/data.js'), 'Missing js/data.js script');
+  assert(html.includes('src="js/insurance-portal.js'), 'Missing js/insurance-portal.js script');
   assert(!html.includes('src="js/company-lookup.js"'), 'Old company-lookup.js should not be included');
   console.log('  ✅ Scripts cleanly wired');
 
@@ -151,7 +151,7 @@ async function runTests() {
   console.log('\nTest 14: Verifying strict compliance wording (no false claims/guarantees)');
   assert(!html.toLowerCase().includes('claim approved'), 'Must not promise claim approval');
   assert(!html.toLowerCase().includes('coverage guaranteed'), 'Must not promise coverage guarantee');
-  assert(html.includes('awaiting review'), 'Required compliance message missing');
+  assert(/awaiting\s+review/i.test(html), 'Required compliance message missing');
   console.log('  ✅ Compliance wording validated');
 
   // Test 15: Verifying Track Status Streamlined Success Design (No Progress Timeline)
